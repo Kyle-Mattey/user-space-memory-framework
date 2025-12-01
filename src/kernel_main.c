@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include "rprintf.h"
 #include "page.h"
+#include "rprintf.h"
+#include "fat.h"
 
 extern void putc(int ch);
 extern void clear_screen(void);
@@ -14,7 +16,6 @@ __attribute__((section(".multiboot"))) =
 {
     MULTIBOOT2_HEADER_MAGIC, 0, 16, -(16 + MULTIBOOT2_HEADER_MAGIC), 0, 12
 };
-
 void main(void) {
     clear_screen();
     esp_printf(putc_adapter, "Hello from my kernel!\r\n");
@@ -35,5 +36,22 @@ void main(void) {
         esp_printf(putc_adapter, "Allocation failed (not enough free pages).\r\n");
     }
 
+    esp_printf(putc_adapter, "Testing FAT filesystem...\n");
+    if (fatInit() != 0) {
+        esp_printf(putc_adapter, "fatInit failed!\n");
+        for(;;);
+    }
+    struct file f;
+    if (fatOpen("FILE.TXT", &f) != 0) {
+        esp_printf(putc_adapter, "fatOpen failed!\n");
+        for(;;);
+    }
+    char buf[1024];
+    int n = fatRead(&f, buf, sizeof(buf) - 1);
+    buf[n] = '\0';
+    esp_printf(putc_adapter, "Read from FILE.TXT:\n%s\n", buf);
+
     for (;;) __asm__ volatile ("hlt");
+
 }
+

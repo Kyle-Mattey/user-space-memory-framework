@@ -7,6 +7,7 @@
 /*                                                   */
 /*---------------------------------------------------*/
 #include "rprintf.h"
+#include <stdarg.h>
 /*---------------------------------------------------*/
 /* The purpose of this routine is to output data the */
 /* same as the standard printf function without the  */
@@ -21,6 +22,7 @@ static int len;
 static int num1;
 static int num2;
 static char pad_character;
+extern int putc_adapter(int c);
 
 size_t strlen(const char *str) {
     unsigned int len = 0;
@@ -44,7 +46,6 @@ int isdig(int c) {
         return 0;
     }
 }
-
 /*---------------------------------------------------*/
 /*                                                   */
 /* This routine puts pad characters into the output  */
@@ -249,6 +250,11 @@ try_next:
       }
    va_end( argp);
    }
-/*---------------------------------------------------*/
+void rprintf(const char *fmt, ...)
 
-
+{
+    va_list args;
+    va_start(args, fmt);
+    esp_vprintf(putc_adapter, (charptr)fmt, args);
+    va_end(args);
+}

@@ -12,7 +12,7 @@ GRUBLOC :=
 endif
 
 CC := $(PREFIX)gcc
-LD := $(PREFIX)ld
+SLD := $(PREFIX)ld
 OBJDUMP := $(PREFIX)objdump
 OBJCOPY := $(PREFIX)objcopy
 SIZE := $(PREFIX)size
@@ -28,7 +28,10 @@ OBJS = \
 	rprintf.o \
 	iopolling.o \
 	page.o \
-	mmu.o
+	mmu.o \
+	fat_kernel.o \
+	ide.o \
+	allocator.o
 
 # Make sure to keep a blank line here after OBJS list
 
@@ -39,6 +42,12 @@ $(ODIR)/%.o: $(SDIR)/%.c
 
 $(ODIR)/%.o: $(SDIR)/%.s
 	$(CC) $(CFLAGS) -c -g -o $@ $^
+NASM    ?= nasm
+ASMFLAGS ?= -f elf32
+obj/ide.o: src/ide.s | obj
+	$(NASM) $(ASMFLAGS) -o $@ $<
+
+
 
 
 all: bin rootfs.img
@@ -63,12 +72,33 @@ rootfs.img:
 	mcopy -i rootfs.img@@1M grub.cfg ::/boot
 	@echo " -- BUILD COMPLETED SUCCESSFULLY --"
 
+run: bin rootfs.img
 
-run:
-	qemu-system-i386 -hda rootfs.img
+	qemu-system-i386 -kernel kernel -hda rootfs.img
+
+
 
 debug:
 	./launch_qemu.sh
 
 clean:
 	rm -f grub.img kernel rootfs.img obj/*
+
+
+.PHONY: fstest run-fstest
+
+
+
+fstest:
+
+	/usr/bin/gcc -std=c11 -O2 -Wall -Wextra -o fstest src/fstest.c src/fat.c
+
+
+
+run-fstest: fstest
+
+	./fstest
+
+
+
+
