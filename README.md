@@ -60,6 +60,8 @@ Note that the new line we added to the `OBJS` list was `neil.o`, not `neil.c`. A
 
 ## running user-space memory allocator
  To run the userspaec memory allocatre run the following commands:
- gcc src/allocator.c src/allocatortest.c -o memtest
+...
+user@system ~ $ gcc src/allocator.c src/allocatortest.c -o memtest
 
-./memtest
+user@system ~ $ ./memtest
+...
